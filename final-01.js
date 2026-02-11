@@ -91,15 +91,40 @@ function assertCategoriaValida(categoria) {
 
 class Produto {
 	constructor({ sku, nome, preco, fabricante, categoria, numeroMaximoParcelas }) {
+	
+		if(!sku){
+			throw new Error("SKU Obrigatorio")
+		}
+		if(preco <= 0){
+			throw new Error("Preço tem que ser maior que 0")
+		}
+		if(!categoria.includes(categoria)){
+			throw new Error("Categoria Invalida");
+		}
+		if(numeroMaximoParcelas <1 || numeroMaximoParcelas > 24){
+			throw new Error("Numero maximo de parcelas tem de estar entre 1 e 24!")
+		}
+
 		this.sku = sku;
         this.nome =nome;
-		throw new Error("TODO: implementar Produto");
+		this.preco =preco;
+		this.fabricante =fabricante;
+		this.categoria=categoria;
+		this.numeroMaximoParcelas =numeroMaximoParcelas;
+
+		
 	}
 
-	getValorDeParcela(numeroDeParcelas) {
-		// TODO
-		throw new Error("TODO: implementar getValorDeParcela");
+	getValorDeParcela(numeroDeParcelas,valor) {
+		if(numeroDeParcelas <1 || numeroDeParcelas > this.numeroMaximoParcelas){
+			throw new Error("Numero de parcelas Invalido");
+		}
+		const valor = this.preco /numeroDeParcelas;
+
+		return Number(valor.toFixed(2));
+		
 	}
+	
 }
 
 // 2) Crie a classe Cliente
@@ -136,7 +161,7 @@ class Cliente {
 // - precoUnitario (number > 0) *congelado no momento de adicionar*
 // Observação: o carrinho usa precoUnitario do momento (para simular mudança de preço no catálogo).
 
-class ItemCarrinho {
+class ItemCarrinho extends Produto {
 	constructor({ sku, quantidade, precoUnitario }) {
 		// TODO
 		throw new Error("TODO: implementar ItemCarrinho");
@@ -158,7 +183,7 @@ class ItemCarrinho {
 // - getQuantidade(sku)
 // - garantirDisponibilidade(sku, quantidade)
 
-class Estoque {
+class Estoque extends ItemCarrinho {
 	constructor() {
 		// TODO
 		throw new Error("TODO: implementar Estoque");
