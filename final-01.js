@@ -186,6 +186,10 @@ class Cliente {
 class ItemCarrinho {
 	constructor({ sku, quantidade, precoUnitario }) {
 		
+		if (!sku || typeof sku !== "string") {
+			throw new Error("SKU inválido");
+		}
+		
 		if(quantidade<1 || Number.isInteger(quantidade) ){
 			throw new Error("Quantidade Invalida")
 		}
