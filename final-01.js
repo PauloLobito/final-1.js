@@ -139,18 +139,40 @@ class Produto {
 
 class Cliente {
 	constructor({ id, nome, tipo = "REGULAR", saldoPontos = 0 }) {
-		// TODO
-		throw new Error("TODO: implementar Cliente");
+		if(!id){
+			throw new Error("Id Obrigatorio!")
+		}
+		if(!nome){
+			throw new Error("Nome invalido")
+		}
+		if(tipo !== "Regular" && tipo !== "Vip"){
+			throw new Error("Tipo Invalido!")	
+		}
+		if(saldoPontos < 0 || !Number.isInteger(saldoPontos)){
+			throw new Error("Pontos Invalidos")
+		}
+		this.id =id;
+		this.nome = nome;
+		this.tipo = tipo;
+		this.saldoPontos = saldoPontos;
+		
 	}
 
 	adicionarPontos(pontos) {
-		// TODO
-		throw new Error("TODO: implementar adicionarPontos");
+		if(Number.isInteger(pontos)|| pontos <= 0){
+			throw new Error("TODO: implementar adicionarPontos");
+		}
+		this.saldoPontos +=pontos;
 	}
 
 	resgatarPontos(pontos) {
-		// TODO
-		throw new Error("TODO: implementar resgatarPontos");
+		if(!Number.isInteger(pontos) || pontos <=0){
+			throw new Error("TODO: implementar resgatarPontos");
+		}
+		if(pontos > this.saldoPontos){
+			throw new Error("Saldo Insuficiente")
+		}
+		this.saldoPontos-=pontos
 	}
 }
 
