@@ -162,7 +162,7 @@ class Cliente {
 		if(Number.isInteger(pontos)|| pontos <= 0){
 			throw new Error("TODO: implementar adicionarPontos");
 		}
-		this.saldoPontos +=pontos;
+		this.saldoPontos += pontos;
 	}
 
 	resgatarPontos(pontos) {
@@ -186,10 +186,10 @@ class Cliente {
 class ItemCarrinho {
 	constructor({ sku, quantidade, precoUnitario }) {
 		
-		if(quantidade<1){
+		if(quantidade<1 || Number.isInteger(quantidade) ){
 			throw new Error("Quantidade Invalida")
 		}
-		if(precoUnitario<=0){
+		if(precoUnitario<=0 || typeof precoUnitario !== "number"){
 			throw new Error("Preço Invalido")
 		}
 		this.sku = sku;
@@ -217,12 +217,12 @@ class ItemCarrinho {
 
 class Estoque extends ItemCarrinho {
 	constructor() {
-		// TODO
+		super()
 		throw new Error("TODO: implementar Estoque");
 	}
 
 	definirQuantidade(sku, quantidade) {
-		// TODO
+		this.quantidade = 0
 		throw new Error("TODO: implementar definirQuantidade");
 	}
 
