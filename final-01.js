@@ -92,7 +92,7 @@ function assertCategoriaValida(categoria) {
 class Produto {
 	constructor({ sku, nome, preco, fabricante, categoria, numeroMaximoParcelas }) {
 	
-		if(!sku){
+		if(!sku || typeof sku == "string"){
 			throw new Error("SKU Obrigatorio")
 		}
 		if(preco <= 0){
@@ -183,17 +183,27 @@ class Cliente {
 // - precoUnitario (number > 0) *congelado no momento de adicionar*
 // Observação: o carrinho usa precoUnitario do momento (para simular mudança de preço no catálogo).
 
-class ItemCarrinho extends Produto {
+class ItemCarrinho {
 	constructor({ sku, quantidade, precoUnitario }) {
-		// TODO
-		throw new Error("TODO: implementar ItemCarrinho");
+		
+		if(quantidade<1){
+			throw new Error("Quantidade Invalida")
+		}
+		if(precoUnitario<=0){
+			throw new Error("Preço Invalido")
+		}
+		this.sku = sku;
+		this.quantidade = quantidade;
+		this.precoUnitario = precoUnitario;
+
 	}
 
 	getTotal() {
-		// TODO
-		throw new Error("TODO: implementar getTotal");
+		return this.precoUnitario * this.quantidade;
+		
 	}
 }
+	
 
 // 4) Crie a classe Estoque
 // Use Map para guardar { sku -> quantidade }
