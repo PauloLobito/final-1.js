@@ -221,33 +221,50 @@ class ItemCarrinho {
 
 class Estoque extends ItemCarrinho {
 	constructor() {
+		this.estoqueMap = new Map()
 		super()
-		throw new Error("TODO: implementar Estoque");
+		if(!(estoque instanceof Map)){
+			throw new Error("Estoque deve ser um Map");
+		}
+		 super({ sku: "", quantidade: 0, precoUnitario: 0 });
+		 this.estoqueMap = Estoque;
 	}
 
 	definirQuantidade(sku, quantidade) {
-		this.quantidade = 0
-		throw new Error("TODO: implementar definirQuantidade");
+		if(quantidade < 0 || !Number.isInteger(quantidade)){
+			throw new Error("Quantidade invalida");
+		}
+		estoqueMap.set(sku, quantidade);
 	}
 
 	adicionar(sku, quantidade) {
-		// TODO
-		throw new Error("TODO: implementar adicionar");
+		if(quantidade < 1 || !Number.isInteger(quantidade)){
+			throw new Error("TODO: implementar adicionar");
+		}
+		let estoqueAtual = estoqueMap.get(sku) || 0;
+		estoqueMap.set(sku,estoqueAtual+quantidade);
+
 	}
 
-	remover(sku, quantidade) {
-		// TODO
-		throw new Error("TODO: implementar remover");
+	remover(sku, quantidade){
+		let estoqueAtual = this.estoqueMap.get(sku);
+		if(estoqueAtual === undefined || estoqueAtual < quantidade){
+
+			throw new Error("TODO: implementar remover");
+		}
+		this.estoqueMap.set(sku,estoqueAtual-quantidade);
 	}
 
 	getQuantidade(sku) {
-		// TODO
-		throw new Error("TODO: implementar getQuantidade");
-	}
+		return this.estoqueMap.get(sku ||0)
+		}
 
 	garantirDisponibilidade(sku, quantidade) {
-		// TODO
-		throw new Error("TODO: implementar garantirDisponibilidade");
+		let estoqueAtual = this.estoqueMap.get(sku)
+		if(estoqueAtual === undefined || estoqueAtual<quantidade){
+			throw new Error("TODO: implementar garantirDisponibilidade");
+		}
+	return true;
 	}
 }
 
