@@ -350,33 +350,79 @@ class Catalogo {
 
 class CarrinhoDeCompras {
 	constructor({ catalogo, estoque }) {
-		// TODO
-		throw new Error("TODO: implementar CarrinhoDeCompras");
+		if(!(catalogo instanceof Catalogo)){
+			throw new Error("Catalogo inválido");
+		}
+		if(!(estoque instanceof Estoque)){
+			throw new Error("Estoque inválido");
+		}
+		this.catalogo = catalogo;
+		this.estoque = estoque;
+		this.itens = new Map();
 	}
 
 	adicionarItem(sku, quantidade) {
-		// TODO
-		throw new Error("TODO: implementar adicionarItem");
+		if(quantidade < 1 || !Number.isInteger(quantidade)){
+		throw new Error("Quantidade inválida");
+	
+	}
+		let produto = this.catalogo.getProduto(sku);
+		this.estoque.garantirDisponibilidade(sku, quantidade);
+		if(this.itens.has(sku)){
+			let item = this.itens.get(sku);
+			this.itens.set(sku, {
+				produto: item.produto,
+				quantidade: item.quantidade + quantidade
+			});
+		} else {
+			this.itens.set(sku, {
+				produto: produto,
+				quantidade: quantidade
+			});
+		}
 	}
 
 	removerItem(sku) {
-		// TODO
-		throw new Error("TODO: implementar removerItem");
+		if(!this.itens.has(sku)){
+			throw new Error("Item não encontrado no carrinho");
+		}
+		this.itens.delete(sku);
 	}
 
 	alterarQuantidade(sku, novaQuantidade) {
-		// TODO
-		throw new Error("TODO: implementar alterarQuantidade");
+		if(novaQuantidade < 1 || !Number.isInteger(novaQuantidade)){
+			throw new Error("Quantidade inválida");
+	
+	}		if(!this.itens.has(sku)){
+			throw new Error("Item não encontrado no carrinho");
+		}
+		let item = this.itens.get(sku);
+		this.itens.set(sku, {
+			produto: item.produto,
+			quantidade: novaQuantidade
+		});
 	}
 
 	listarItens() {
-		// TODO
-		throw new Error("TODO: implementar listarItens");
+		let itens = [];
+		for(let [sku, item] of this.itens){
+			itens.push({
+				sku: sku,
+				quantidade: item.quantidade,
+				precoUnitario: item.produto.preco
+			});
+		}
+		return itens;
+
 	}
 
 	getSubtotal() {
-		// TODO
-		throw new Error("TODO: implementar getSubtotal");
+		let subtotal =0;
+		for(let [sku, item] of this.itens){
+			subtotal += item.produto.preco * item.quantidade;
+		}
+		return round2(subtotal);		
+		
 	}
 }
 
