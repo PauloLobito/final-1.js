@@ -221,9 +221,9 @@ class ItemCarrinho {
 
 class Estoque extends ItemCarrinho {
 	constructor() {
-		this.estoqueMap = new Map()
+		let estoqueMap = new Map()
 		super()
-		if(!(estoque instanceof Map)){
+		if(!(estoqueMap instanceof Map)){
 			throw new Error("Estoque deve ser um Map");
 		}
 		 super({ sku: "", quantidade: 0, precoUnitario: 0 });
@@ -279,28 +279,62 @@ class Estoque extends ItemCarrinho {
 
 class Catalogo {
 	constructor() {
-		// TODO
-		throw new Error("TODO: implementar Catalogo");
+		let catalogoMap = new Map()
+		super()
+		if(!( catalogoMap instanceof Map)){
+			throw new Error("Estoque deve ser um Map");
+		}
+
+		 super({ sku: "", quantidade: 0, precoUnitario: 0 });
+		 this.catalogoMap = catalogoMap;
 	}
+		
 
 	adicionarProduto(produto) {
-		// TODO
-		throw new Error("TODO: implementar adicionarProduto");
+		if(!(produto instanceof Produto)){
+			throw new Error("Produto inválido");
+		}
+		if(this.catalogoMap.has(produto.sku)){
+			throw new Error("SKU já existe no catálogo");
+		}
+		this.catalogoMap.set(produto.sku, produto);
+
 	}
 
 	getProduto(sku) {
-		// TODO
-		throw new Error("TODO: implementar getProduto");
+		if(!this.catalogoMap.has(sku)){
+			throw new Error("Produto não encontrado");
+		}
+		return this.catalogoMap.get(sku);
+
 	}
 
+
 	listarPorCategoria(categoria) {
-		// TODO
-		throw new Error("TODO: implementar listarPorCategoria");
+		let produtos = [];
+		for (let [sku, produto] of this.catalogoMap) {
+			if (produto.categoria === categoria) {
+				produtos.push(produto);
+			}
+		}
+		return produtos;
+
 	}
 
 	atualizarPreco(sku, novoPreco) {
-		// TODO
-		throw new Error("TODO: implementar atualizarPreco");
+		if(!this.catalogoMap.has(sku)){
+			throw new Error("Produto não encontrado");
+		}
+		let produto = this.catalogoMap.get(sku);
+		if(novoPreco <= 0 || typeof novoPreco !== "number"){
+			throw new Error("Preço inválido");
+		}
+		this.catalogoMap.set(sku, new Produto({
+			sku: produto.sku,
+			nome: produto.nome,
+			categoria: produto.categoria,
+			preco: novoPreco
+		}));
 	}
 }
 
