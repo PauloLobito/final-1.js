@@ -92,15 +92,16 @@ function assertCategoriaValida(categoria) {
 class Produto {
 	constructor({ sku, nome, preco, fabricante, categoria, numeroMaximoParcelas }) {
 	
-		if(!sku || typeof sku == "string"){
-			throw new Error("SKU Obrigatorio")
+		if (!sku || typeof sku !== "string") {
+			throw new Error("SKU obrigatório e deve ser string.");
 		}
+
 		if(preco <= 0){
 			throw new Error("Preço tem que ser maior que 0")
 		}
-		if(!categoria.includes(categoria)){
-			throw new Error("Categoria Invalida");
-		}
+		assertCategoriaValida(categoria);
+
+		
 		if(numeroMaximoParcelas <1 || numeroMaximoParcelas > 24){
 			throw new Error("Numero maximo de parcelas tem de estar entre 1 e 24!")
 		}
@@ -115,15 +116,15 @@ class Produto {
 		
 	}
 
-	getValorDeParcela(numeroDeParcelas,valor) {
-		if(numeroDeParcelas <1 || numeroDeParcelas > this.numeroMaximoParcelas){
-			throw new Error("Numero de parcelas Invalido");
-		}
-		const valor = this.preco /numeroDeParcelas;
-
-		return Number(valor.toFixed(2));
-		
+	getValorDeParcela(numeroDeParcelas) {
+	if (!Number.isInteger(numeroDeParcelas) ||
+		numeroDeParcelas < 1 ||
+		numeroDeParcelas > this.numeroMaximoParcelas) {
+		throw new Error("Número de parcelas inválido.");
 	}
+
+	return round2(this.preco / numeroDeParcelas);
+}
 	
 }
 
@@ -145,9 +146,10 @@ class Cliente {
 		if(!nome){
 			throw new Error("Nome invalido")
 		}
-		if(tipo !== "Regular" && tipo !== "Vip"){
-			throw new Error("Tipo Invalido!")	
+		if (tipo !== "REGULAR" && tipo !== "VIP") {
+			throw new Error("Tipo inválido.");
 		}
+
 		if(saldoPontos < 0 || !Number.isInteger(saldoPontos)){
 			throw new Error("Pontos Invalidos")
 		}
@@ -159,20 +161,21 @@ class Cliente {
 	}
 
 	adicionarPontos(pontos) {
-		if(Number.isInteger(pontos)|| pontos <= 0){
-			throw new Error("TODO: implementar adicionarPontos");
+		if (!Number.isInteger(pontos) || pontos <= 0) {
+			throw new Error("Pontos inválidos.");
 		}
+
 		this.saldoPontos += pontos;
 	}
 
 	resgatarPontos(pontos) {
-		if(!Number.isInteger(pontos) || pontos <=0){
-			throw new Error("TODO: implementar resgatarPontos");
+		if(!Number.isInteger(pontos) || pontos <= 0){
+    		throw new Error("Pontos inválidos.");
 		}
 		if(pontos > this.saldoPontos){
-			throw new Error("Saldo Insuficiente")
+   			throw new Error("Saldo insuficiente.");
 		}
-		this.saldoPontos-=pontos
+		this.saldoPontos -= pontos;
 	}
 }
 
@@ -190,8 +193,8 @@ class ItemCarrinho {
 			throw new Error("SKU inválido");
 		}
 		
-		if(quantidade<1 || Number.isInteger(quantidade) ){
-			throw new Error("Quantidade Invalida")
+		if (!Number.isInteger(quantidade) || quantidade < 1) {
+   			throw new Error("Quantidade inválida");
 		}
 		if(precoUnitario<=0 || typeof precoUnitario !== "number"){
 			throw new Error("Preço Invalido")
@@ -219,54 +222,39 @@ class ItemCarrinho {
 // - getQuantidade(sku)
 // - garantirDisponibilidade(sku, quantidade)
 
-class Estoque extends ItemCarrinho {
+class Estoque {
 	constructor() {
-		let estoqueMap = new Map()
-		super()
-		if(!(estoqueMap instanceof Map)){
-			throw new Error("Estoque deve ser um Map");
-		}
-		 super({ sku: "", quantidade: 0, precoUnitario: 0 });
-		 this.estoqueMap = Estoque;
+		this.estoqueMap = new Map();
 	}
 
 	definirQuantidade(sku, quantidade) {
-		if(quantidade < 0 || !Number.isInteger(quantidade)){
-			throw new Error("Quantidade invalida");
-		}
-		estoqueMap.set(sku, quantidade);
+		assertNonNegativeInt(quantidade, "Quantidade");
+		this.estoqueMap.set(sku, quantidade);
 	}
 
 	adicionar(sku, quantidade) {
-		if(quantidade < 1 || !Number.isInteger(quantidade)){
-			throw new Error("TODO: implementar adicionar");
-		}
-		let estoqueAtual = estoqueMap.get(sku) || 0;
-		estoqueMap.set(sku,estoqueAtual+quantidade);
-
+		assertNonNegativeInt(quantidade, "Quantidade");
+		const atual = this.getQuantidade(sku);
+		this.estoqueMap.set(sku, atual + quantidade);
 	}
 
-	remover(sku, quantidade){
-		let estoqueAtual = this.estoqueMap.get(sku);
-		if(estoqueAtual === undefined || estoqueAtual < quantidade){
-
-			throw new Error("TODO: implementar remover");
-		}
-		this.estoqueMap.set(sku,estoqueAtual-quantidade);
+	remover(sku, quantidade) {
+		assertPositiveNumber(quantidade, "Quantidade");
+		this.garantirDisponibilidade(sku, quantidade);
+		this.estoqueMap.set(sku, this.getQuantidade(sku) - quantidade);
 	}
 
 	getQuantidade(sku) {
-		return this.estoqueMap.get(sku ||0)
-		}
+		return this.estoqueMap.get(sku) || 0;
+	}
 
 	garantirDisponibilidade(sku, quantidade) {
-		let estoqueAtual = this.estoqueMap.get(sku)
-		if(estoqueAtual === undefined || estoqueAtual<quantidade){
-			throw new Error("TODO: implementar garantirDisponibilidade");
+		if (this.getQuantidade(sku) < quantidade) {
+			throw new Error(`Estoque insuficiente para ${sku}`);
 		}
-	return true;
 	}
 }
+
 
 // 5) Crie a classe Catalogo
 // Use Map para guardar { sku -> Produto }
@@ -279,64 +267,40 @@ class Estoque extends ItemCarrinho {
 
 class Catalogo {
 	constructor() {
-		let catalogoMap = new Map()
-		super()
-		if(!( catalogoMap instanceof Map)){
-			throw new Error("Estoque deve ser um Map");
-		}
-
-		 super({ sku: "", quantidade: 0, precoUnitario: 0 });
-		 this.catalogoMap = catalogoMap;
+		this.catalogoMap = new Map();
 	}
-		
 
 	adicionarProduto(produto) {
-		if(!(produto instanceof Produto)){
-			throw new Error("Produto inválido");
+		if (!(produto instanceof Produto)) {
+			throw new Error("Produto inválido.");
 		}
-		if(this.catalogoMap.has(produto.sku)){
-			throw new Error("SKU já existe no catálogo");
+		if (this.catalogoMap.has(produto.sku)) {
+			throw new Error("SKU já cadastrado.");
 		}
 		this.catalogoMap.set(produto.sku, produto);
-
 	}
 
 	getProduto(sku) {
-		if(!this.catalogoMap.has(sku)){
-			throw new Error("Produto não encontrado");
+		const produto = this.catalogoMap.get(sku);
+		if (!produto) {
+			throw new Error("Produto não encontrado: " + sku);
 		}
-		return this.catalogoMap.get(sku);
-
+		return produto;
 	}
 
-
 	listarPorCategoria(categoria) {
-		let produtos = [];
-		for (let [sku, produto] of this.catalogoMap) {
-			if (produto.categoria === categoria) {
-				produtos.push(produto);
-			}
-		}
-		return produtos;
-
+		assertCategoriaValida(categoria);
+		return [...this.catalogoMap.values()]
+			.filter(p => p.categoria === categoria);
 	}
 
 	atualizarPreco(sku, novoPreco) {
-		if(!this.catalogoMap.has(sku)){
-			throw new Error("Produto não encontrado");
-		}
-		let produto = this.catalogoMap.get(sku);
-		if(novoPreco <= 0 || typeof novoPreco !== "number"){
-			throw new Error("Preço inválido");
-		}
-		this.catalogoMap.set(sku, new Produto({
-			sku: produto.sku,
-			nome: produto.nome,
-			categoria: produto.categoria,
-			preco: novoPreco
-		}));
+		assertPositiveNumber(novoPreco, "Preço");
+		const produto = this.getProduto(sku);
+		produto.preco = novoPreco;
 	}
 }
+
 
 // 6) Crie a classe CarrinhoDeCompras
 // Responsabilidades:
@@ -366,21 +330,29 @@ class CarrinhoDeCompras {
 		if(quantidade < 1 || !Number.isInteger(quantidade)){
 		throw new Error("Quantidade inválida");
 	
-	}
-		let produto = this.catalogo.getProduto(sku);
-		this.estoque.garantirDisponibilidade(sku, quantidade);
-		if(this.itens.has(sku)){
-			let item = this.itens.get(sku);
-			this.itens.set(sku, {
-				produto: item.produto,
-				quantidade: item.quantidade + quantidade
-			});
-		} else {
-			this.itens.set(sku, {
-				produto: produto,
-				quantidade: quantidade
-			});
 		}
+		const produto = this.catalogo.getProduto(sku);
+		this.estoque.garantirDisponibilidade(sku, quantidade);
+
+		if (this.itens.has(sku)) {
+   			const item = this.itens.get(sku);
+    		const novaQuantidade = item.quantidade + quantidade;
+
+    		this.estoque.garantirDisponibilidade(sku, novaQuantidade);
+
+    		item.quantidade = novaQuantidade;
+		} else {
+    		this.estoque.garantirDisponibilidade(sku, quantidade);
+
+    		const item = new ItemCarrinho({
+        		sku,
+        		quantidade,
+        		precoUnitario: produto.preco
+    	});
+
+    	this.itens.set(sku, item);
+	
+	}
 	}
 
 	removerItem(sku) {
@@ -391,40 +363,37 @@ class CarrinhoDeCompras {
 	}
 
 	alterarQuantidade(sku, novaQuantidade) {
-		if(novaQuantidade < 1 || !Number.isInteger(novaQuantidade)){
-			throw new Error("Quantidade inválida");
-	
-	}		if(!this.itens.has(sku)){
-			throw new Error("Item não encontrado no carrinho");
-		}
-		let item = this.itens.get(sku);
-		this.itens.set(sku, {
-			produto: item.produto,
-			quantidade: novaQuantidade
-		});
+    if (!Number.isInteger(novaQuantidade) || novaQuantidade < 1) {
+        throw new Error("Quantidade inválida");
+    }
+
+    	const item = this.itens.get(sku);
+    if (!item) {
+        throw new Error("Item não encontrado no carrinho");
+    }
+
+    	this.estoque.garantirDisponibilidade(sku, novaQuantidade);
+
+    	item.quantidade = novaQuantidade;
 	}
 
-	listarItens() {
-		let itens = [];
-		for(let [sku, item] of this.itens){
-			itens.push({
-				sku: sku,
-				quantidade: item.quantidade,
-				precoUnitario: item.produto.preco
-			});
-		}
-		return itens;
 
+	listarItens() {
+    	return [...this.itens.values()].map(item => ({
+        	sku: item.sku,
+     		quantidade: item.quantidade,
+        	precoUnitario: item.precoUnitario
+    	}));
 	}
 
 	getSubtotal() {
-		let subtotal =0;
-		for(let [sku, item] of this.itens){
-			subtotal += item.produto.preco * item.quantidade;
-		}
-		return round2(subtotal);		
-		
+    	let subtotal = 0;
+    	for (const item of this.itens.values()) {
+        	subtotal += item.getTotal();
+    	}
+    	return round2(subtotal);
 	}
+
 }
 
 // ==========================================
@@ -481,43 +450,48 @@ class CarrinhoDeCompras {
 // - calcular({ cliente, itens, cupomCodigo }) => breakdown
 // Onde itens é o resultado de carrinho.listarItens()
 
+
 class MotorDePrecos {
 	constructor({ catalogo }) {
-		if(!catalogo)
-		{
+		if (!(catalogo instanceof Catalogo)) {
 			throw new Error("TODO: implementar MotorDePrecos");
 		}
 		this.catalogo = catalogo;
 	}
+	
 
 	calcular({ cliente, itens, cupomCodigo }) {
-		if(!Array.isArray(itens)){
+		if (!Array.isArray(itens)) {
 			throw new Error("TODO: implementar calcular");
 		}
+
 		const descontos = [];
 		let subtotal = 0;
 
 		const detalhados = itens.map(item => {
-			const produto = this.catalogo.buscarPorSku(item.sku);
+			const produto = this.catalogo.getProduto(item.sku);
 			if (!produto) throw new Error("Produto não encontrado: " + item.sku);
 
-			const totalItem = produto.preco * item.quantidade;
+			const totalItem = round2(item.precoUnitario * item.quantidade);
 			subtotal += totalItem;
 
 			return { ...item, produto, totalItem };
 		});
 
+		subtotal = round2(subtotal);
 		let base = subtotal;
 
-		
+		// ---------------- R3 - Leve 3 pague 2 ----------------
 		const precosVestuario = [];
+
 		for (const item of detalhados) {
 			if (item.produto.categoria === "vestuário") {
 				for (let i = 0; i < item.quantidade; i++) {
-					precosVestuario.push(item.produto.preco);
+					precosVestuario.push(item.precoUnitario);
 				}
 			}
 		}
+
 		precosVestuario.sort((a, b) => a - b);
 		const grupos = Math.floor(precosVestuario.length / 3);
 
@@ -525,26 +499,43 @@ class MotorDePrecos {
 		for (let i = 0; i < grupos; i++) {
 			descontoR3 += precosVestuario[i];
 		}
+
+		descontoR3 = round2(descontoR3);
+
 		if (descontoR3 > 0) {
-			descontos.push({ codigo: "R3", descricao: "Leve 3 pague 2", valor: descontoR3 });
-			base -= descontoR3;
+			descontos.push({
+				codigo: "R3",
+				descricao: "Leve 3 pague 2",
+				valor: descontoR3
+			});
+			base = round2(base - descontoR3);
 		}
 
-		
+		// ---------------- R4 - >= 500 ----------------
 		if (base >= 500) {
-			descontos.push({ codigo: "R4", descricao: "Desconto compras >= 500", valor: 30 });
-			base -= 30;
+			const valor = 30;
+			descontos.push({
+				codigo: "R4",
+				descricao: "Desconto compras >= 500",
+				valor
+			});
+			base = round2(base - valor);
 		}
 
-		
+		// ---------------- R1 - VIP ----------------
 		const bloqueiaVip = cupomCodigo === "SEM-VIP";
+
 		if (cliente.tipo === "VIP" && !bloqueiaVip) {
-			const valor = base * 0.05;
-			descontos.push({ codigo: "R1", descricao: "Desconto VIP 5%", valor });
-			base -= valor;
+			const valor = round2(base * 0.05);
+			descontos.push({
+				codigo: "R1",
+				descricao: "Desconto VIP 5%",
+				valor
+			});
+			base = round2(base - valor);
 		}
 
-		
+		// ---------------- Cupons ----------------
 		let frete = 20;
 
 		if (cupomCodigo) {
@@ -554,9 +545,13 @@ class MotorDePrecos {
 			}
 
 			if (cupomCodigo === "ETIC10") {
-				const valor = base * 0.10;
-				descontos.push({ codigo: "ETIC10", descricao: "Cupom 10%", valor });
-				base -= valor;
+				const valor = round2(base * 0.10);
+				descontos.push({
+					codigo: "ETIC10",
+					descricao: "Cupom 10%",
+					valor
+				});
+				base = round2(base - valor);
 			}
 
 			if (cupomCodigo === "FRETEGRATIS") {
@@ -565,29 +560,33 @@ class MotorDePrecos {
 		}
 
 		base = Math.max(0, base);
-		const totalDescontos = descontos.reduce((s, d) => s + d.valor, 0);
+		base = round2(base);
 
-		
+		const totalDescontos = round2(
+			descontos.reduce((s, d) => s + d.valor, 0)
+		);
+
+		// ---------------- Impostos ----------------
 		const impostoPorCategoria = {};
 		let totalImpostos = 0;
 
 		for (const item of detalhados) {
-			const proporcao = item.totalItem / subtotal;
-			const baseItem = base * proporcao;
+			const proporcao = subtotal === 0 ? 0 : item.totalItem / subtotal;
+			const baseItem = round2(base * proporcao);
 
-			let aliquota = 0.1;
-			if (item.produto.categoria === "vestuário") aliquota = 0.05;
-			if (item.produto.categoria === "eletrodoméstico") aliquota = 0.15;
-
-			const imposto = baseItem * aliquota;
+			const aliquota = IVA_POR_CATEGORIA[item.produto.categoria];
+			const imposto = round2(baseItem * aliquota);
 
 			impostoPorCategoria[item.produto.categoria] =
-				(impostoPorCategoria[item.produto.categoria] || 0) + imposto;
+				round2((impostoPorCategoria[item.produto.categoria] || 0) + imposto);
 
 			totalImpostos += imposto;
 		}
 
-		const total = base + totalImpostos + frete;
+		totalImpostos = round2(totalImpostos);
+
+		// ---------------- Total Final ----------------
+		const total = round2(base + totalImpostos + frete);
 
 		return {
 			subtotal,
@@ -601,6 +600,7 @@ class MotorDePrecos {
 		};
 	}
 }
+
 	
 
 
@@ -666,12 +666,12 @@ class CaixaRegistradora {
 
 		
 		for (const item of itens) {
-			const disponivel = this.estoque.obterQuantidade(item.sku);
+			const disponivel = this.estoque.getQuantidade(item.sku);
 			if (item.quantidade > disponivel) {
 				throw new Error("Estoque insuficiente: " + item.sku);
 			}
 
-			const produto = this.catalogo.buscarPorSku(item.sku);
+			const produto = this.catalogo.getProduto(item.sku);
 			if (numeroDeParcelas > produto.numeroMaximoParcelas) {
 				throw new Error("Parcelamento excede máximo permitido: " + item.sku);
 			}
@@ -713,26 +713,40 @@ class CupomFiscal {
 		linhas.push("------------------------");
 
 		for (const item of this.pedido.itens) {
-			const produto = this.catalogo.buscarPorSku(item.sku);
-			const totalItem = produto.preco * item.quantidade;
-			linhas.push(
-				`${item.sku} x${item.quantidade} ${produto.preco.toFixed(2)} = ${totalItem.toFixed(2)}`
+    		const produto = this.catalogo.getProduto(item.sku);
+    		const totalItem = item.precoUnitario * item.quantidade;
+
+    		linhas.push(
+				`${item.sku} x${item.quantidade} ${formatBRL(item.precoUnitario)} = ${formatBRL(totalItem)}`
 			);
 		}
 
 		linhas.push("------------------------");
-		linhas.push("Subtotal: " + this.pedido.breakdown.subtotal.toFixed(2));
+		linhas.push("Subtotal: " + formatBRL(this.pedido.breakdown.subtotal));
 
 		for (const d of this.pedido.breakdown.descontos) {
-			linhas.push(`${d.codigo}: -${d.valor.toFixed(2)}`);
+			linhas.push(`${d.codigo}: -${formatBRL(d.valor)}`);
 		}
 
 		for (const [cat, val] of Object.entries(this.pedido.breakdown.impostoPorCategoria)) {
-			linhas.push(`Imposto ${cat}: ${val.toFixed(2)}`);
+			linhas.push(`Imposto ${cat}: ${formatBRL(val)}`);
 		}
 
-		linhas.push("Frete: " + this.pedido.breakdown.frete.toFixed(2));
-		linhas.push("TOTAL: " + this.pedido.breakdown.total.toFixed(2));
+		linhas.push("Frete: " + formatBRL(this.pedido.breakdown.frete));
+		linhas.push("TOTAL: " + formatBRL(this.pedido.breakdown.total));
+
+		// Se houver parcelas, imprime resumo
+		if (this.pedido.itens.length > 0) {
+			linhas.push("------------------------");
+			linhas.push("Parcelas (exemplo de 1x a nX):");
+			for (const item of this.pedido.itens) {
+				const produto = this.catalogo.getProduto(item.sku);
+				const parcelas = 1; // se quiser, você pode passar numeroDeParcelas real
+				const valorParcela = produto.getValorDeParcela(parcelas);
+				linhas.push(`${item.sku}: ${parcelas}x de ${formatBRL(valorParcela)}`);
+			}
+		}
+
 		linhas.push("Status: " + this.pedido.status);
 
 		return linhas;
