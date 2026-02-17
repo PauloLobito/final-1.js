@@ -972,4 +972,4 @@ function runDemo() {
 }
 
 // Quando terminar tudo, descomente:
-// runDemo();
+runDemo();

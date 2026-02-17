@@ -1,8 +1,13 @@
-FROM node
+FROM node:18
 
 WORKDIR /app
-COPY ./src /app/src
 
-RUN npm install -g npm@11.8.0
+# Copiar os ficheiros do npm primeiro (boa prática)
+COPY package*.json ./
 
-CMD ["bash"]
+RUN npm install
+
+# Copiar o resto do projecto
+COPY . .
+
+CMD ["npm", "run", "start"]
