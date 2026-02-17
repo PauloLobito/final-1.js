@@ -707,8 +707,35 @@ class CupomFiscal {
 	}
 
 	gerarLinhas() {
-		// TODO
-		throw new Error("TODO: implementar gerarLinhas");
+		const linhas = [];
+		linhas.push("===== CUPOM FISCAL =====");
+		linhas.push("Pedido: " + this.pedido.id);
+		linhas.push("------------------------");
+
+		for (const item of this.pedido.itens) {
+			const produto = this.catalogo.buscarPorSku(item.sku);
+			const totalItem = produto.preco * item.quantidade;
+			linhas.push(
+				`${item.sku} x${item.quantidade} ${produto.preco.toFixed(2)} = ${totalItem.toFixed(2)}`
+			);
+		}
+
+		linhas.push("------------------------");
+		linhas.push("Subtotal: " + this.pedido.breakdown.subtotal.toFixed(2));
+
+		for (const d of this.pedido.breakdown.descontos) {
+			linhas.push(`${d.codigo}: -${d.valor.toFixed(2)}`);
+		}
+
+		for (const [cat, val] of Object.entries(this.pedido.breakdown.impostoPorCategoria)) {
+			linhas.push(`Imposto ${cat}: ${val.toFixed(2)}`);
+		}
+
+		linhas.push("Frete: " + this.pedido.breakdown.frete.toFixed(2));
+		linhas.push("TOTAL: " + this.pedido.breakdown.total.toFixed(2));
+		linhas.push("Status: " + this.pedido.status);
+
+		return linhas;
 	}
 }
 
