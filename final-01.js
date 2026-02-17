@@ -509,7 +509,7 @@ class MotorDePrecos {
 
 		let base = subtotal;
 
-		// ================= R3 - Leve 3 Pague 2 =================
+		
 		const precosVestuario = [];
 		for (const item of detalhados) {
 			if (item.produto.categoria === "vestuário") {
@@ -530,13 +530,13 @@ class MotorDePrecos {
 			base -= descontoR3;
 		}
 
-		// ================= R4 - >= 500 =================
+		
 		if (base >= 500) {
 			descontos.push({ codigo: "R4", descricao: "Desconto compras >= 500", valor: 30 });
 			base -= 30;
 		}
 
-		// ================= R1 - VIP =================
+		
 		const bloqueiaVip = cupomCodigo === "SEM-VIP";
 		if (cliente.tipo === "VIP" && !bloqueiaVip) {
 			const valor = base * 0.05;
@@ -544,7 +544,7 @@ class MotorDePrecos {
 			base -= valor;
 		}
 
-		// ================= R2 - Cupom =================
+		
 		let frete = 20;
 
 		if (cupomCodigo) {
@@ -567,7 +567,7 @@ class MotorDePrecos {
 		base = Math.max(0, base);
 		const totalDescontos = descontos.reduce((s, d) => s + d.valor, 0);
 
-		// ================= Impostos =================
+		
 		const impostoPorCategoria = {};
 		let totalImpostos = 0;
 
@@ -656,13 +656,40 @@ class Pedido {
 
 class CaixaRegistradora {
 	constructor({ catalogo, estoque, motorDePrecos }) {
-		// TODO
-		throw new Error("TODO: implementar CaixaRegistradora");
+		this.catalogo = catalogo;
+		this.estoque = estoque;
+		this.motor = motorDePrecos;
 	}
 
 	fecharCompra({ cliente, carrinho, cupomCodigo = null, numeroDeParcelas = 1 }) {
-		// TODO
-		throw new Error("TODO: implementar fecharCompra");
+		const itens = carrinho.listarItens();
+
+		
+		for (const item of itens) {
+			const disponivel = this.estoque.obterQuantidade(item.sku);
+			if (item.quantidade > disponivel) {
+				throw new Error("Estoque insuficiente: " + item.sku);
+			}
+
+			const produto = this.catalogo.buscarPorSku(item.sku);
+			if (numeroDeParcelas > produto.numeroMaximoParcelas) {
+				throw new Error("Parcelamento excede máximo permitido: " + item.sku);
+			}
+		}
+
+		const breakdown = this.motor.calcular({ cliente, itens, cupomCodigo });
+
+		
+		for (const item of itens) {
+			this.estoque.remover(item.sku, item.quantidade);
+		}
+
+		return new Pedido({
+			id: "P" + Date.now(),
+			clienteId: cliente.id,
+			itens,
+			breakdown
+		});
 	}
 }
 
@@ -675,8 +702,8 @@ class CaixaRegistradora {
 
 class CupomFiscal {
 	constructor({ pedido, catalogo }) {
-		// TODO
-		throw new Error("TODO: implementar CupomFiscal");
+		this.pedido = pedido;
+		this.catalogo = catalogo;
 	}
 
 	gerarLinhas() {
