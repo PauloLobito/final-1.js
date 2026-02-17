@@ -352,6 +352,7 @@ class CarrinhoDeCompras {
 	constructor({ catalogo, estoque }) {
 		if(!(catalogo instanceof Catalogo)){
 			throw new Error("Catalogo inválido");
+
 		}
 		if(!(estoque instanceof Estoque)){
 			throw new Error("Estoque inválido");
@@ -482,15 +483,126 @@ class CarrinhoDeCompras {
 
 class MotorDePrecos {
 	constructor({ catalogo }) {
-		// TODO
-		throw new Error("TODO: implementar MotorDePrecos");
+		if(!catalogo)
+		{
+			throw new Error("TODO: implementar MotorDePrecos");
+		}
+		this.catalogo = catalogo;
 	}
 
 	calcular({ cliente, itens, cupomCodigo }) {
-		// TODO
-		throw new Error("TODO: implementar calcular");
+		if(!Array.isArray(itens)){
+			throw new Error("TODO: implementar calcular");
+		}
+		const descontos = [];
+		let subtotal = 0;
+
+		const detalhados = itens.map(item => {
+			const produto = this.catalogo.buscarPorSku(item.sku);
+			if (!produto) throw new Error("Produto não encontrado: " + item.sku);
+
+			const totalItem = produto.preco * item.quantidade;
+			subtotal += totalItem;
+
+			return { ...item, produto, totalItem };
+		});
+
+		let base = subtotal;
+
+		// ================= R3 - Leve 3 Pague 2 =================
+		const precosVestuario = [];
+		for (const item of detalhados) {
+			if (item.produto.categoria === "vestuário") {
+				for (let i = 0; i < item.quantidade; i++) {
+					precosVestuario.push(item.produto.preco);
+				}
+			}
+		}
+		precosVestuario.sort((a, b) => a - b);
+		const grupos = Math.floor(precosVestuario.length / 3);
+
+		let descontoR3 = 0;
+		for (let i = 0; i < grupos; i++) {
+			descontoR3 += precosVestuario[i];
+		}
+		if (descontoR3 > 0) {
+			descontos.push({ codigo: "R3", descricao: "Leve 3 pague 2", valor: descontoR3 });
+			base -= descontoR3;
+		}
+
+		// ================= R4 - >= 500 =================
+		if (base >= 500) {
+			descontos.push({ codigo: "R4", descricao: "Desconto compras >= 500", valor: 30 });
+			base -= 30;
+		}
+
+		// ================= R1 - VIP =================
+		const bloqueiaVip = cupomCodigo === "SEM-VIP";
+		if (cliente.tipo === "VIP" && !bloqueiaVip) {
+			const valor = base * 0.05;
+			descontos.push({ codigo: "R1", descricao: "Desconto VIP 5%", valor });
+			base -= valor;
+		}
+
+		// ================= R2 - Cupom =================
+		let frete = 20;
+
+		if (cupomCodigo) {
+			const validos = ["ETIC10", "FRETEGRATIS", "SEM-VIP"];
+			if (!validos.includes(cupomCodigo)) {
+				throw new Error("Cupom inválido");
+			}
+
+			if (cupomCodigo === "ETIC10") {
+				const valor = base * 0.10;
+				descontos.push({ codigo: "ETIC10", descricao: "Cupom 10%", valor });
+				base -= valor;
+			}
+
+			if (cupomCodigo === "FRETEGRATIS") {
+				frete = 0;
+			}
+		}
+
+		base = Math.max(0, base);
+		const totalDescontos = descontos.reduce((s, d) => s + d.valor, 0);
+
+		// ================= Impostos =================
+		const impostoPorCategoria = {};
+		let totalImpostos = 0;
+
+		for (const item of detalhados) {
+			const proporcao = item.totalItem / subtotal;
+			const baseItem = base * proporcao;
+
+			let aliquota = 0.1;
+			if (item.produto.categoria === "vestuário") aliquota = 0.05;
+			if (item.produto.categoria === "eletrodoméstico") aliquota = 0.15;
+
+			const imposto = baseItem * aliquota;
+
+			impostoPorCategoria[item.produto.categoria] =
+				(impostoPorCategoria[item.produto.categoria] || 0) + imposto;
+
+			totalImpostos += imposto;
+		}
+
+		const total = base + totalImpostos + frete;
+
+		return {
+			subtotal,
+			descontos,
+			totalDescontos,
+			baseImposto: base,
+			impostoPorCategoria,
+			totalImpostos,
+			frete,
+			total
+		};
 	}
 }
+	
+
 
 // ==========================================
 // PARTE 3 - Checkout / Pedido / Cupom
@@ -510,18 +622,26 @@ class MotorDePrecos {
 
 class Pedido {
 	constructor({ id, clienteId, itens, breakdown }) {
-		// TODO
-		throw new Error("TODO: implementar Pedido");
+		this.id = id;
+		this.clienteId = clienteId;
+		this.itens = itens;
+		this.breakdown = breakdown;
+		this.status = "ABERTO";
+		this.createdAt = new Date();
 	}
 
 	pagar() {
-		// TODO
-		throw new Error("TODO: implementar pagar");
+		if (this.status !== "ABERTO") {
+			throw new Error("Pedido não pode ser pago");
+		}
+		this.status = "PAGO";
 	}
 
 	cancelar() {
-		// TODO
-		throw new Error("TODO: implementar cancelar");
+		if (this.status === "PAGO") {
+			throw new Error("Pedido já pago não pode ser cancelado");
+		}
+		this.status = "CANCELADO";
 	}
 }
 
