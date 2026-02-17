@@ -2,13 +2,13 @@
   "name": "app",
   "version": "1.0.0",
   "description": "Projeto Final de Programação Web - Estoque e Vendas",
-  "homepage": "https://github.com/RodrigoDias123/P-Final#readme",
+  "homepage": "https://github.com/PauloLobito/P-Final#readme",
   "bugs": {
-    "url": "https://github.com/RodrigoDias123/P-Final/issues"
+    "url": "https://github.com/PauloLobito/P-Final/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/RodrigoDias123/P-Final.git"
+    "url": "git+https://github.com/PauloLobito/P-Final.git"
   },
   "license": "ISC",
   "author": "",
@@ -17,8 +17,7 @@
   "scripts": {
     "start": "node src/final-01.js"
   },
-
-   "dependencies": {
+  "dependencies": {
     "prompt-sync": "^4.2.0"
   }
 }
