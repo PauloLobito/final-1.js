@@ -764,38 +764,51 @@ class Impressora {
 
 class RelatorioVendas {
 	constructor() {
-		// TODO
-		throw new Error("TODO: implementar RelatorioVendas");
+		this.pedidos = [];
 	}
 
 	registrarPedido(pedido) {
-		// TODO
-		throw new Error("TODO: implementar registrarPedido");
+		if (pedido.status === "PAGO") {
+			this.pedidos.push(pedido);
+		}
 	}
 
 	totalArrecadado() {
-		// TODO
-		throw new Error("TODO: implementar totalArrecadado");
+		return this.pedidos.reduce((s, p) => s + p.breakdown.total, 0);
 	}
 
 	totalImpostos() {
-		// TODO
-		throw new Error("TODO: implementar totalImpostos");
+		return this.pedidos.reduce((s, p) => s + p.breakdown.totalImpostos, 0);
 	}
 
 	totalDescontos() {
-		// TODO
-		throw new Error("TODO: implementar totalDescontos");
+		return this.pedidos.reduce((s, p) => s + p.breakdown.totalDescontos, 0);
 	}
 
 	rankingProdutosPorQuantidade(topN = 5) {
-		// TODO
-		throw new Error("TODO: implementar rankingProdutosPorQuantidade");
+		const mapa = new Map();
+
+		for (const p of this.pedidos) {
+			for (const item of p.itens) {
+				mapa.set(item.sku, (mapa.get(item.sku) || 0) + item.quantidade);
+			}
+		}
+
+		return [...mapa.entries()]
+			.sort((a, b) => b[1] - a[1])
+			.slice(0, topN);
 	}
 
 	arrecadadoPorCategoria() {
-		// TODO
-		throw new Error("TODO: implementar arrecadadoPorCategoria");
+		const mapa = new Map();
+
+		for (const p of this.pedidos) {
+			for (const [cat, imposto] of Object.entries(p.breakdown.impostoPorCategoria)) {
+				mapa.set(cat, (mapa.get(cat) || 0) + imposto);
+			}
+		}
+
+		return Object.fromEntries(mapa);
 	}
 }
 
